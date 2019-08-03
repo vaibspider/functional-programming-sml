@@ -17,7 +17,8 @@ fun toStringList ""  = nil
           val paddedStr = padZeros(str)
           fun toStringL("", alist) = alist
             | toStringL(s, alist)  = 
-                toStringL(if (size s <> 0) then substring(s, 4, size(s)-4) else "", substring(s, 0, 4)::alist)
+                toStringL(if (size s <> 0) then substring(s, 0, size(s)-4) else
+                  "", substring(s, size(s)-4, 4)::alist)
         in
           toStringL(paddedStr, [])
         end;
