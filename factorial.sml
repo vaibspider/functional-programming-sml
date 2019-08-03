@@ -29,6 +29,8 @@ fun fromString ""  = nil
         let
           val strL = toStringList str
           fun chartoInt ch = ord ch - ord #"0"
+          (* strtoInt function can be replaced by a standard library function -
+           * Int.fromString: which converts a string to integer *)
           fun strtoInt s = 
               let
                 val chlist = explode s
@@ -41,4 +43,15 @@ fun fromString ""  = nil
               end;
         in
           map strtoInt strL
+        end;
+
+(* toString: int list -> string : Convert a list of integers into corresponding string *)
+fun toString nil   = ""
+  | toString alist =
+        let
+          val strList = map Int.toString alist
+          fun toStr nil    = ""
+            | toStr (h::t) = h ^ toStr(t)
+        in
+          toStr strList
         end;
