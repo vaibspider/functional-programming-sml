@@ -56,56 +56,89 @@ fun toString nil   = ""
           toStr strList
         end;
 
+(* toBigInt: int -> int list : Convert an integer into a list of integers form,
+ * where each integer is in base 10^4 *)
+fun toBigInt num =
+        let
+          val numStr = Int.toString num
+        in
+          fromString numStr
+        end;
+
+(* shift: int list -> int -> int list : Take an integer list and a number, which
+ * is to be considered as a power of Base (by default 10^4). Shift the integer
+ * list by those many digits *)
+fun shift nil _   = nil
+  | shift alist 0 = alist
+  | shift alist n = 
+        let
+          fun shiftAcc inli opli 0 = (inli @ opli)
+            | shiftAcc inli opli i =
+                shiftAcc inli ([0000]::opli) (i - 1)
+        in
+          shiftAcc alist [] n
+        end;
+
+(* addBigInt: int list -> int list -> int list : Add two large integer lists and
+ * return the resultant integer list *)
+fun addBigInt nil _       = nil
+  | addBigInt _ nil       = nil
+  | addBigInt alist blist = 
+        let
+          val intList    = zip (op +) alist blist
+          val bigIntList = map toBigInt intList
+          val revBigIntList = rev bigIntList
+          fun getIntCarry [integer]        = (0, integer)
+            | getIntCarry [carry, integer] = (carry, integer)
+          fun flatten nil oplist carryPrev    = carryPrev::oplist
+            | flatten (h::t) oplist carryPrev = 
+                let
+                  val (carry, integer) = getIntCarry(h)
+                  val add = integer + carryPrev
+                  val (car, res) = getIntCarry(toBigInt add)
+                in
+                  flatten(t, res::oplist, carry + car)
+                end;
+        in
+          flatten revBigIntList nil 0
+        end;
+
 (* karatsuba: int list -> int list -> int list : Take two large integers in the
  * integer list form and return their multiplication in the integer list form *)
 fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
-  | karatsuba [num1] [num2] =
-        let
-          val prod     = num1 * num2
-          val prodStr  = Int.toString prod
-          val prodSize = size prodStr
-          val diff     = prodSize - 4
-        in
-          if diff > 0 then
-            [valOf(Int.fromString(substring(prodStr, 0, diff))), valOf(Int.fromString(substring(prodStr, prodSize - 4, 4)))]
-          else
-            [prod]
-        end;
+  | karatsuba [num1] [num2] = toBigInt (num1 * num2)
   | karatsuba [xH, xL] [yL] =
         let
-          val a        = [0]
-          val d        = karatsuba [xL] [yL]
-          val e        = subBigInt (karatsuba (addBigInt xH xL) [yL]) d
-          val aShifted = [0]
-          val eShifted = shift e 1
-          val result   = addBigInt eShifted d
+          val a        = 0
+          val d        = xL * yL
+          val e        = ((xH + xL) * yL) - d
+          val aShifted = 0
+          val eShifted = shift toBigInt(e) 1
         in
-          result
+          addBigInt eShifted toBigInt(d)
         end;
   | karatsuba [xL] [yH, yL] =
         let
           val a        = 0
-          val d        = karatsuba [xL] [yL]
-          val e        = subBigInt (karatsuba [xL] (addBigInt yH yL)) d
-          val aShifted = [0]
-          val eShifted = shift e 1
-          val result   = addBigInt eShifted d
+          val d        = xL * yL
+          val e        = (xL * (yH + yL)) - d
+          val aShifted = 0
+          val eShifted = shift toBigInt(e) 1
         in
-          result
+          addBigInt eShifted toBigInt(d)
         end;
   | karatsuba [xH, xL] [yH, yL] =
         let
-          val a = karatsuba [xH] [yH]
-          val d = karatsuba [xL] [yL]
-          val e = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
-          val aShifted = shift a 2
-          val eShifted = shift e 1
-          val result   = addBigInt (addBigInt aShifted eShifted) d
+          val a        = xH * yH
+          val d        = xL * yL
+          val e        = (xH + xL) * (yH + yL) - a - d
+          val aShifted = shift toBigInt(a) 2
+          val eShifted = shift toBigInt(e) 1
         in
-          result
+          addBigInt (addBigInt aShifted eShifted) d
         end;
-  | karatsuba alist blist   =
+  (*| karatsuba alist blist   =
         let
           val alistN = length alist
           val blistN = length blist
@@ -114,7 +147,7 @@ fun karatsuba nil _         = nil
         in
           if (alistN <= 2 andalso blistN <=2) then
 
-        end;
+        end;*)
 
 (* factorial: string -> string : Convert a number given as a string to its
  * factorial also in string *)
