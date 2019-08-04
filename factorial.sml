@@ -74,10 +74,13 @@ fun shift nil _   = nil
         let
           fun shiftAcc inli opli 0 = (inli @ opli)
             | shiftAcc inli opli i =
-                shiftAcc inli ([0000]::opli) (i - 1)
+                shiftAcc inli (0000::opli) (i - 1)
         in
           shiftAcc alist [] n
         end;
+
+fun zip f nil nil = nil
+  | zip f (h::t) (i::u) = f(h, i)::zip f t u;
 
 (* addBigInt: int list -> int list -> int list : Add two large integer lists and
  * return the resultant integer list *)
@@ -85,7 +88,13 @@ fun addBigInt nil _       = nil
   | addBigInt _ nil       = nil
   | addBigInt alist blist = 
         let
-          val intList    = zip (op +) alist blist
+          val diff = (length alist) - (length blist)
+          fun alignAcc (iolist, 0) = iolist
+            | alignAcc (iolist, n) =
+                alignAcc(0::iolist, n - 1)
+          val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
+          val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
+          val intList    = zip (op +) alistNew blistNew
           val bigIntList = map toBigInt intList
           val revBigIntList = rev bigIntList
           fun getIntCarry [integer]        = (0, integer)
@@ -97,7 +106,7 @@ fun addBigInt nil _       = nil
                   val add = integer + carryPrev
                   val (car, res) = getIntCarry(toBigInt add)
                 in
-                  flatten(t, res::oplist, carry + car)
+                  flatten t (res::oplist) (carry + car)
                 end;
         in
           flatten revBigIntList nil 0
