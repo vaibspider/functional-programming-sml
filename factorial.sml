@@ -123,29 +123,29 @@ fun karatsuba nil _         = nil
           val d        = xL * yL
           val e        = ((xH + xL) * yL) - d
           val aShifted = 0
-          val eShifted = shift toBigInt(e) 1
+          val eShifted = shift (toBigInt e) 1
         in
-          addBigInt eShifted toBigInt(d)
-        end;
+          addBigInt eShifted (toBigInt d)
+        end
   | karatsuba [xL] [yH, yL] =
         let
           val a        = 0
           val d        = xL * yL
           val e        = (xL * (yH + yL)) - d
           val aShifted = 0
-          val eShifted = shift toBigInt(e) 1
+          val eShifted = shift (toBigInt e) 1
         in
-          addBigInt eShifted toBigInt(d)
-        end;
+          addBigInt eShifted (toBigInt d)
+        end
   | karatsuba [xH, xL] [yH, yL] =
         let
           val a        = xH * yH
           val d        = xL * yL
           val e        = (xH + xL) * (yH + yL) - a - d
-          val aShifted = shift toBigInt(a) 2
-          val eShifted = shift toBigInt(e) 1
+          val aShifted = shift (toBigInt a) 2
+          val eShifted = shift (toBigInt e) 1
         in
-          addBigInt (addBigInt aShifted eShifted) d
+          addBigInt (addBigInt aShifted eShifted) [d]
         end;
   (*| karatsuba alist blist   =
         let
