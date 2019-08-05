@@ -45,7 +45,8 @@ fun fromString ""  = nil
           map strtoInt strL
         end;
 
-(* toString: int list -> string : Convert a list of integers into corresponding string *)
+(* toString: int list -> string : Convert a list of integers into corresponding
+* string *) (* Found a bug! *)
 fun toString nil   = ""
   | toString alist =
         let
@@ -79,6 +80,7 @@ fun shift nil _   = nil
           shiftAcc alist [] n
         end;
 
+(* zip: ('a * 'b -> 'c) -> 'a list -> 'b list -> 'c list *)
 fun zip f nil nil = nil
   | zip f (h::t) (i::u) = f(h, i)::zip f t u;
 
@@ -97,6 +99,8 @@ fun addBigInt nil _       = nil
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val intList    = zip (op +) alistNew blistNew
+          val p = printList(intList, "\nAddition: ")
+          val p = print("\n")
           val bigIntList = map toBigInt intList
           val revBigIntList = rev bigIntList
           fun getIntCarry [integer]        = (0, integer)
@@ -114,6 +118,8 @@ fun addBigInt nil _       = nil
           flatten revBigIntList nil 0
         end;
 
+(* subBigInt: int list -> int list -> int list : Subtract two large integer lists and
+ * return the resultant integer list *)
 fun subBigInt nil _ = nil
   | subBigInt _ nil = nil
   | subBigInt alist blist =
@@ -125,6 +131,8 @@ fun subBigInt nil _ = nil
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val intList  = zip (op -) alistNew blistNew
+          val p = printList(intList, "\nSubtraction: ")
+          val p = print("\n")
           val revIntList = rev intList
           fun convToPostveAcc(nil, oplist, borrow)    = oplist (* borrow not handled here *)
             | convToPostveAcc((h::t), oplist, borrow) =
@@ -138,11 +146,7 @@ fun subBigInt nil _ = nil
  * integer list form and return their multiplication in the integer list form *)
 fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
-  | karatsuba [num1] [num2] = 
-        let
-        in
-          toBigInt (num1 * num2)
-        end
+  | karatsuba [num1] [num2] = toBigInt (num1 * num2)
   | karatsuba [xH, xL] [yL] =
         let
           val a        = 0
@@ -171,14 +175,14 @@ fun karatsuba nil _         = nil
           val aShifted = shift (toBigInt a) 2
           val eShifted = shift (toBigInt e) 1
         in
-          addBigInt (addBigInt aShifted eShifted) [d]
+          addBigInt (addBigInt aShifted eShifted) (toBigInt d)
         end
   | karatsuba alist blist   =
         let
           val alistN = length alist
           val blistN = length blist
           val maxN   = Int.max(alistN, blistN)
-          val halfN  = (maxN+1) div 2
+          val halfN  = (maxN + 1) div 2
           fun alignAcc (iolist, 0) = iolist
             | alignAcc (iolist, n) =
                 alignAcc(0::iolist, n - 1)
@@ -202,10 +206,12 @@ fun karatsuba nil _         = nil
           val xL = dropFirstM(alistNew, halfN)
           val yH = takeFirstM(blistNew, halfN)
           val yL = dropFirstM(blistNew, halfN)
+          val p = print("\nhalfN = " ^ Int.toString(halfN))
+          val p = print("\n")
           val a  = karatsuba xH yH
           val d  = karatsuba xL yL
           val e  = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
-          val aShifted = shift a (2*halfN)
+          val aShifted = shift a maxN
           val eShifted = shift e halfN
           val toPrint = addBigInt (addBigInt aShifted eShifted) d
           val p = printList(toPrint, "\nMultiplication : ")
