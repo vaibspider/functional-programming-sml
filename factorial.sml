@@ -140,20 +140,14 @@ fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
   | karatsuba [num1] [num2] = 
         let
-          val p = print("\n1 by 1\n")
-          val p = print("\nproduct = " ^ Int.toString(num1 * num2) ^ "\n")
         in
           toBigInt (num1 * num2)
         end
   | karatsuba [xH, xL] [yL] =
         let
-          val p = print("\n2 by 1\n")
           val a        = 0
-          val p = print("\na = " ^ Int.toString(a))
           val d        = xL * yL
-          val p = print("\nd = " ^ Int.toString(d))
           val e        = ((xH + xL) * yL) - d
-          val p = print("\ne = " ^ Int.toString(e))
           val aShifted = 0
           val eShifted = shift (toBigInt e) 1
         in
@@ -161,13 +155,9 @@ fun karatsuba nil _         = nil
         end
   | karatsuba [xL] [yH, yL] =
         let
-          val p = print("\n1 by 2\n")
           val a        = 0
-          val p = print("\na = " ^ Int.toString(a))
           val d        = xL * yL
-          val p = print("\nd = " ^ Int.toString(d))
           val e        = (xL * (yH + yL)) - d
-          val p = print("\ne = " ^ Int.toString(e))
           val aShifted = 0
           val eShifted = shift (toBigInt e) 1
         in
@@ -175,13 +165,9 @@ fun karatsuba nil _         = nil
         end
   | karatsuba [xH, xL] [yH, yL] =
         let
-          val p = print("\n2 by 2\n")
           val a        = xH * yH
-          val p = print("\na = " ^ Int.toString(a))
           val d        = xL * yL
-          val p = print("\nd = " ^ Int.toString(d))
           val e        = (xH + xL) * (yH + yL) - a - d
-          val p = print("\ne = " ^ Int.toString(e))
           val aShifted = shift (toBigInt a) 2
           val eShifted = shift (toBigInt e) 1
         in
@@ -189,7 +175,6 @@ fun karatsuba nil _         = nil
         end
   | karatsuba alist blist   =
         let
-          val p = print("\nM by M")
           val alistN = length alist
           val blistN = length blist
           val maxN   = Int.max(alistN, blistN)
@@ -214,20 +199,12 @@ fun karatsuba nil _         = nil
             | dropFirstM((h::t), m) =
                 dropFirstM(t, m - 1)
           val xH = takeFirstM(alistNew, halfN)
-          val p = printList(xH, "\nxH: ")
           val xL = dropFirstM(alistNew, halfN)
-          val p = printList(xL, "\nxL: ")
           val yH = takeFirstM(blistNew, halfN)
-          val p = printList(yH, "\nyH: ")
           val yL = dropFirstM(blistNew, halfN)
-          val p = printList(yL, "\nyL: ")
           val a  = karatsuba xH yH
-          val p = printList(a, "\na: ")
           val d  = karatsuba xL yL
-          val p = printList(d, "\nd: ")
           val e  = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
-          val p = printList(e, "\ne: ")
-          val p = print("\n")
           val aShifted = shift a (2*halfN)
           val eShifted = shift e halfN
           val toPrint = addBigInt (addBigInt aShifted eShifted) d
