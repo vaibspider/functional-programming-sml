@@ -147,26 +147,6 @@ fun subBigInt nil _ = nil
 fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
   | karatsuba [num1] [num2] = toBigInt (num1 * num2)
-  | karatsuba [xH, xL] [yL] =
-        let
-          val a        = 0
-          val d        = xL * yL
-          val e        = ((xH + xL) * yL) - d
-          val aShifted = 0
-          val eShifted = shift (toBigInt e) 1
-        in
-          addBigInt eShifted (toBigInt d)
-        end
-  | karatsuba [xL] [yH, yL] =
-        let
-          val a        = 0
-          val d        = xL * yL
-          val e        = (xL * (yH + yL)) - d
-          val aShifted = 0
-          val eShifted = shift (toBigInt e) 1
-        in
-          addBigInt eShifted (toBigInt d)
-        end
   | karatsuba [xH, xL] [yH, yL] =
         let
           val a        = xH * yH
