@@ -82,6 +82,8 @@ fun shift nil _   = nil
 fun zip f nil nil = nil
   | zip f (h::t) (i::u) = f(h, i)::zip f t u;
 
+fun printList(li, message) = print(message ^ (String.concatWith ", " (map Int.toString li)));
+
 (* addBigInt: int list -> int list -> int list : Add two large integer lists and
  * return the resultant integer list *)
 fun addBigInt nil _       = nil
@@ -99,7 +101,7 @@ fun addBigInt nil _       = nil
           val revBigIntList = rev bigIntList
           fun getIntCarry [integer]        = (0, integer)
             | getIntCarry [carry, integer] = (carry, integer)
-          fun flatten nil oplist carryPrev    = carryPrev::oplist
+          fun flatten nil oplist carryPrev    = (if (carryPrev > 0) then carryPrev::oplist else oplist)
             | flatten (h::t) oplist carryPrev = 
                 let
                   val (carry, integer) = getIntCarry(h)
@@ -112,16 +114,46 @@ fun addBigInt nil _       = nil
           flatten revBigIntList nil 0
         end;
 
+fun subBigInt nil _ = nil
+  | subBigInt _ nil = nil
+  | subBigInt alist blist =
+        let
+          val diff = (length alist) - (length blist)
+          fun alignAcc (iolist, 0) = iolist
+            | alignAcc (iolist, n) =
+                alignAcc(0::iolist, n - 1)
+          val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
+          val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
+          val intList  = zip (op -) alistNew blistNew
+          val revIntList = rev intList
+          fun convToPostveAcc(nil, oplist, borrow)    = oplist (* borrow not handled here *)
+            | convToPostveAcc((h::t), oplist, borrow) =
+                convToPostveAcc(t, (if h - borrow < 0 then 10000 + (h - borrow) else h - borrow)::oplist, 
+                                        (if h - borrow < 0 then 1 else 0))
+        in
+          convToPostveAcc(revIntList, nil, 0)
+        end;
+
 (* karatsuba: int list -> int list -> int list : Take two large integers in the
  * integer list form and return their multiplication in the integer list form *)
 fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
-  | karatsuba [num1] [num2] = toBigInt (num1 * num2)
+  | karatsuba [num1] [num2] = 
+        let
+          val p = print("\n1 by 1\n")
+          val p = print("\nproduct = " ^ Int.toString(num1 * num2) ^ "\n")
+        in
+          toBigInt (num1 * num2)
+        end
   | karatsuba [xH, xL] [yL] =
         let
+          val p = print("\n2 by 1\n")
           val a        = 0
+          val p = print("\na = " ^ Int.toString(a))
           val d        = xL * yL
+          val p = print("\nd = " ^ Int.toString(d))
           val e        = ((xH + xL) * yL) - d
+          val p = print("\ne = " ^ Int.toString(e))
           val aShifted = 0
           val eShifted = shift (toBigInt e) 1
         in
@@ -129,9 +161,13 @@ fun karatsuba nil _         = nil
         end
   | karatsuba [xL] [yH, yL] =
         let
+          val p = print("\n1 by 2\n")
           val a        = 0
+          val p = print("\na = " ^ Int.toString(a))
           val d        = xL * yL
+          val p = print("\nd = " ^ Int.toString(d))
           val e        = (xL * (yH + yL)) - d
+          val p = print("\ne = " ^ Int.toString(e))
           val aShifted = 0
           val eShifted = shift (toBigInt e) 1
         in
@@ -139,24 +175,67 @@ fun karatsuba nil _         = nil
         end
   | karatsuba [xH, xL] [yH, yL] =
         let
+          val p = print("\n2 by 2\n")
           val a        = xH * yH
+          val p = print("\na = " ^ Int.toString(a))
           val d        = xL * yL
+          val p = print("\nd = " ^ Int.toString(d))
           val e        = (xH + xL) * (yH + yL) - a - d
+          val p = print("\ne = " ^ Int.toString(e))
           val aShifted = shift (toBigInt a) 2
           val eShifted = shift (toBigInt e) 1
         in
           addBigInt (addBigInt aShifted eShifted) [d]
-        end;
-  (*| karatsuba alist blist   =
+        end
+  | karatsuba alist blist   =
         let
+          val p = print("\nM by M")
           val alistN = length alist
           val blistN = length blist
-          val maxN   = max(alistN, blistN)
+          val maxN   = Int.max(alistN, blistN)
           val halfN  = (maxN+1) div 2
+          fun alignAcc (iolist, 0) = iolist
+            | alignAcc (iolist, n) =
+                alignAcc(0::iolist, n - 1)
+          val diff = alistN - blistN
+          val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
+          val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
+          fun takeFirstM(nil, m) = nil
+            | takeFirstM(li, m)  = 
+                let
+                  fun takeFirstNAcc(ipli, 0, oplist) = oplist
+                    | takeFirstNAcc((h::t), n, oplist) =
+                        takeFirstNAcc(t, n - 1, oplist @ [h])
+                in
+                  takeFirstNAcc(li, m, nil)
+                end;
+          fun dropFirstM(nil, m)    = nil
+            | dropFirstM(li, 0)     = li
+            | dropFirstM((h::t), m) =
+                dropFirstM(t, m - 1)
+          val xH = takeFirstM(alistNew, halfN)
+          val p = printList(xH, "\nxH: ")
+          val xL = dropFirstM(alistNew, halfN)
+          val p = printList(xL, "\nxL: ")
+          val yH = takeFirstM(blistNew, halfN)
+          val p = printList(yH, "\nyH: ")
+          val yL = dropFirstM(blistNew, halfN)
+          val p = printList(yL, "\nyL: ")
+          val a  = karatsuba xH yH
+          val p = printList(a, "\na: ")
+          val d  = karatsuba xL yL
+          val p = printList(d, "\nd: ")
+          val e  = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
+          val p = printList(e, "\ne: ")
+          val p = print("\n")
+          val aShifted = shift a (2*halfN)
+          val eShifted = shift e halfN
+          val toPrint = addBigInt (addBigInt aShifted eShifted) d
+          val p = printList(toPrint, "\nMultiplication : ")
+          val p = print("\n")
         in
-          if (alistN <= 2 andalso blistN <=2) then
-
-        end;*)
+          toPrint
+        end;
 
 (* factorial: string -> string : Convert a number given as a string to its
  * factorial also in string *)
