@@ -182,16 +182,16 @@ fun karatsuba nil _         = nil
             | dropFirstM(li, 0)     = li
             | dropFirstM((h::t), m) =
                 dropFirstM(t, m - 1)
-          val xH = takeFirstM(alistNew, halfN)
-          val xL = dropFirstM(alistNew, halfN)
-          val yH = takeFirstM(blistNew, halfN)
-          val yL = dropFirstM(blistNew, halfN)
-          val p = print("\nhalfN = " ^ Int.toString(halfN))
+          val xH = takeFirstM(alistNew, maxN - halfN)
+          val xL = dropFirstM(alistNew, maxN - halfN)
+          val yH = takeFirstM(blistNew, maxN - halfN)
+          val yL = dropFirstM(blistNew, maxN - halfN)
+          val p = print("\nmaxN - halfN = " ^ Int.toString(maxN - halfN))
           val p = print("\n")
           val a  = karatsuba xH yH
           val d  = karatsuba xL yL
           val e  = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
-          val aShifted = shift a maxN
+          val aShifted = shift a (2*halfN)
           val eShifted = shift e halfN
           val toPrint = addBigInt (addBigInt aShifted eShifted) d
           val p = printList(toPrint, "\nMultiplication : ")
