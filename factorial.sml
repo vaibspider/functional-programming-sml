@@ -28,6 +28,11 @@ fun fromString ""  = nil
   | fromString str = 
         let
           val strL = toStringList str
+          fun removeZeros nil    = nil
+            | removeZeros [one]  = [one]
+            | removeZeros (h::t) =
+                if ((h = "0000") orelse (h = "000") orelse (h = "00") orelse (h = "0")) then removeZeros t else (h::t)
+          val strLR = removeZeros strL
           fun chartoInt ch = ord ch - ord #"0"
           (* strtoInt function can be replaced by a standard library function -
            * Int.fromString: which converts a string to integer *)
@@ -42,7 +47,7 @@ fun fromString ""  = nil
                 strtoIntAcc(diglist, 0)
               end;
         in
-          map strtoInt strL
+          map strtoInt strLR
         end;
 
 (* toString: int list -> string : Convert a list of integers into corresponding
@@ -75,7 +80,7 @@ fun shift nil _   = nil
         let
           fun shiftAcc inli opli 0 = (inli @ opli)
             | shiftAcc inli opli i =
-                shiftAcc inli (0000::opli) (i - 1)
+                shiftAcc inli (0::opli) (i - 1)
         in
           shiftAcc alist [] n
         end;
@@ -86,22 +91,40 @@ fun zip f nil nil = nil
 
 fun printList(li, message) = print(message ^ (String.concatWith ", " (map Int.toString li)));
 
+
+fun truncateZeros nil = 
+        let
+          val p = print("truncate nil")
+        in
+          nil
+        end
+  | truncateZeros [one]  = [one]
+  | truncateZeros (h::t) =
+      if h = 0 then truncateZeros t else (h::t)
+
+fun alignAcc (iolist, 0) = iolist
+  | alignAcc (iolist, n) =
+      alignAcc(0::iolist, n - 1)
+
 (* addBigInt: int list -> int list -> int list : Add two large integer lists and
  * return the resultant integer list *)
 fun addBigInt nil _       = nil
   | addBigInt _ nil       = nil
   | addBigInt alist blist = 
         let
-          val diff = (length alist) - (length blist)
-          fun alignAcc (iolist, 0) = iolist
-            | alignAcc (iolist, n) =
-                alignAcc(0::iolist, n - 1)
-          val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
-          val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
-          val intList    = zip (op +) alistNew blistNew
-          val p = printList(intList, "\nAddition: ")
-          val p = print("\n")
-          val bigIntList = map toBigInt intList
+          (*val alistTr = truncateZeros alist
+          val blistTr = truncateZeros blist*)
+          val alistTr = alist
+          val blistTr = blist
+          val diff = (length alistTr) - (length blistTr)
+          val alistNew = alignAcc(alistTr, if diff < 0 then ~diff else 0)
+          val blistNew = alignAcc(blistTr, if diff > 0 then diff else 0)
+          val intList  = zip (op +) alistNew blistNew
+          (*val trIntList = truncateZeros intList*)
+          val trIntList = intList
+          (*val p = printList(trIntList, "\nAddition: ")
+          val p = print("\n")*)
+          val bigIntList = map toBigInt trIntList
           val revBigIntList = rev bigIntList
           fun getIntCarry [integer]        = (0, integer)
             | getIntCarry [carry, integer] = (carry, integer)
@@ -115,7 +138,8 @@ fun addBigInt nil _       = nil
                   flatten t (res::oplist) (carry + car)
                 end;
         in
-          flatten revBigIntList nil 0
+          truncateZeros (flatten revBigIntList nil 0)
+          (*flatten revBigIntList nil 0*)
         end;
 
 (* subBigInt: int list -> int list -> int list : Subtract two large integer lists and
@@ -124,21 +148,25 @@ fun subBigInt nil _ = nil
   | subBigInt _ nil = nil
   | subBigInt alist blist =
         let
-          val diff = (length alist) - (length blist)
-          fun alignAcc (iolist, 0) = iolist
-            | alignAcc (iolist, n) =
-                alignAcc(0::iolist, n - 1)
-          val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
-          val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
+          (*val alistTr = truncateZeros alist
+          val blistTr = truncateZeros blist*)
+          val alistTr = alist
+          val blistTr = blist
+          val diff = (length alistTr) - (length blistTr)
+          val alistNew = alignAcc(alistTr, if diff < 0 then ~diff else 0)
+          val blistNew = alignAcc(blistTr, if diff > 0 then diff else 0)
           val intList  = zip (op -) alistNew blistNew
-          val p = printList(intList, "\nSubtraction: ")
-          val p = print("\n")
-          val revIntList = rev intList
+          (*val trIntList = truncateZeros intList*)
+          val trIntList = intList
+          (*val p = printList(trIntList, "\nSubtraction: ")
+          val p = print("\n")*)
+          val revIntList = rev trIntList
           fun convToPostveAcc(nil, oplist, borrow)    = oplist (* borrow not handled here *)
             | convToPostveAcc((h::t), oplist, borrow) =
                 convToPostveAcc(t, (if h - borrow < 0 then 10000 + (h - borrow) else h - borrow)::oplist, 
                                         (if h - borrow < 0 then 1 else 0))
         in
+          (*truncateZeros (convToPostveAcc(revIntList, nil, 0))*)
           convToPostveAcc(revIntList, nil, 0)
         end;
 
@@ -159,16 +187,20 @@ fun karatsuba nil _         = nil
         end
   | karatsuba alist blist   =
         let
-          val alistN = length alist
+          (*val alistN = length alist
           val blistN = length blist
           val maxN   = Int.max(alistN, blistN)
-          val halfN  = (maxN + 1) div 2
-          fun alignAcc (iolist, 0) = iolist
-            | alignAcc (iolist, n) =
-                alignAcc(0::iolist, n - 1)
-          val diff = alistN - blistN
-          val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
-          val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
+          val halfN  = (maxN + 1) div 2*)
+          (*val diff = alistN - blistN*)
+          (*val alistTr = truncateZeros alist
+          val blistTr = truncateZeros blist*)
+          val alistTr = alist
+          val blistTr = blist
+          val diff = length alistTr - length blistTr
+          val maxN = Int.max(length alistTr, length blistTr)
+          val halfN = (maxN + 1) div 2
+          val alistNew = alignAcc(alistTr, if diff < 0 then ~diff else 0)
+          val blistNew = alignAcc(blistTr, if diff > 0 then diff else 0)
           fun takeFirstM(nil, m) = nil
             | takeFirstM(li, m)  = 
                 let
@@ -186,24 +218,33 @@ fun karatsuba nil _         = nil
           val xL = dropFirstM(alistNew, maxN - halfN)
           val yH = takeFirstM(blistNew, maxN - halfN)
           val yL = dropFirstM(blistNew, maxN - halfN)
-          val p = print("\nmaxN - halfN = " ^ Int.toString(maxN - halfN))
-          val p = print("\n")
+         (*  val p = print("\nmaxN - halfN = " ^ Int.toString(maxN - halfN))
+          val p = print("\n") *)
           val a  = karatsuba xH yH
           val d  = karatsuba xL yL
           val e  = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
           val aShifted = shift a (2*halfN)
           val eShifted = shift e halfN
           val toPrint = addBigInt (addBigInt aShifted eShifted) d
-          val p = printList(toPrint, "\nMultiplication : ")
-          val p = print("\n")
+          (*val p = printList(toPrint, "\nMultiplication : ")
+          val p = print("\n")*)
         in
           toPrint
         end;
 
 (* factorial: string -> string : Convert a number given as a string to its
  * factorial also in string *)
-(*fun factorial "" = ""
+fun factorial "" = nil
   | factorial str =
         let
           val intList = fromString str
-          *)
+          fun fact nil       = nil
+            | fact [0]       = [1]
+            | fact numInList =
+                karatsuba numInList (fact (subBigInt numInList [1]))
+          val res = fact intList
+          (*val p = printList(res, "Factorial: ")
+          val p = print("\n")*)
+        in
+          res
+        end;
