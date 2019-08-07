@@ -103,7 +103,7 @@ fun printList(li, message) = print(message ^ (String.concatWith ", " (map Int.to
 
 (* truncateZeros: int list -> int list
  * Truncate leading zero elements in an integer list *)
-fun truncateZeros nil = nil
+fun truncateZeros nil    = nil
   | truncateZeros [one]  = [one]
   | truncateZeros (h::t) = if h = 0 then truncateZeros t else (h::t)
 
@@ -120,7 +120,7 @@ fun getIntCarry [integer]        = (0, integer)
 
 (* flatten: int int list -> int list -> int -> int list
  * Convert a list of list of integers to just a list of integers (in a way, flatten them); Also pass on the carry to one to another in the process *)
-fun flatten nil oplist carryPrev    = (if (carryPrev > 0) then carryPrev::oplist else oplist)
+fun flatten nil oplist carryPrev  = (if (carryPrev > 0) then carryPrev::oplist else oplist)
 | flatten (h::t) oplist carryPrev = 
     let
       val (carry, integer) = getIntCarry(h)
@@ -134,17 +134,20 @@ fun flatten nil oplist carryPrev    = (if (carryPrev > 0) then carryPrev::oplist
  * Add two large integer lists and return the resultant integer list *)
 fun addBigInt nil _       = nil
   | addBigInt _ nil       = nil
+  | addBigInt [one] [two] = truncateZeros (toBigInt (one + two))
+  | addBigInt anyList [0] = truncateZeros anyList
+  | addBigInt [0] anyList = truncateZeros anyList
   | addBigInt alist blist = 
         let
-          val diff = (length alist) - (length blist)
+          val diff     = (length alist) - (length blist)
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val intList  = zip (op +) alistNew blistNew
           (*val p = printList(intList, "\nAddition: ")
           val p = print("\n")*)
-          val bigIntList = map toBigInt intList
+          val bigIntList    = map toBigInt intList
           val revBigIntList = rev bigIntList
-      in
+        in
           truncateZeros (flatten revBigIntList nil 0)
         end;
 
@@ -157,18 +160,20 @@ fun convToPostveAcc(nil, oplist, borrow)    = oplist (* borrow not used here *)
 
 (* subBigInt: int list -> int list -> int list
  * Subtract two large integer lists and return the resultant integer list *)
-fun subBigInt nil _ = nil
-  | subBigInt _ nil = nil
+fun subBigInt nil _       = nil
+  | subBigInt _ nil       = nil
+  | subBigInt anyList [0] = anyList
+  | subBigInt [one] [two] = [one - two]
   | subBigInt alist blist =
         let
-          val diff = (length alist) - (length blist)
+          val diff     = (length alist) - (length blist)
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val intList  = zip (op -) alistNew blistNew
           (*val p = printList(intList, "\nSubtraction: ")
           val p = print("\n")*)
           val revIntList = rev intList
-       in
+        in
           convToPostveAcc(revIntList, nil, 0)
         end;
 
@@ -177,7 +182,7 @@ fun subBigInt nil _ = nil
 fun takeFirstM(nil, m) = nil
   | takeFirstM(li, m)  = 
       let
-        fun takeFirstNAcc(ipli, 0, oplist) = oplist
+        fun takeFirstNAcc(ipli, 0, oplist)   = oplist
           | takeFirstNAcc((h::t), n, oplist) =
               takeFirstNAcc(t, n - 1, oplist @ [h])
       in
@@ -230,11 +235,11 @@ fun karatsuba nil _         = nil
         in
           addBigInt (addBigInt aShifted eShifted) (toBigInt d)
         end
-  | karatsuba alist blist   =
+  | karatsuba alist blist =
         let
-          val diff = length alist - length blist
-          val maxN = Int.max(length alist, length blist)
-          val halfN = (maxN + 1) div 2
+          val diff     = length alist - length blist
+          val maxN     = Int.max(length alist, length blist)
+          val halfN    = (maxN + 1) div 2
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val xH = List.take(alistNew, maxN - halfN)
