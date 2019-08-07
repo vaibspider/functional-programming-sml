@@ -169,6 +169,10 @@ fun dropFirstM(nil, m)    = nil
  * integer list form and return their multiplication in the integer list form *)
 fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
+  | karatsuba [1] any       = any
+  | karatsuba any [1]       = any
+  | karatsuba [0] _         = [0]
+  | karatsuba _  [0]        = [0]
   | karatsuba [num1] [num2] = toBigInt (num1 * num2)
   | karatsuba [xH, xL] [yH, yL] =
         let
@@ -206,16 +210,23 @@ fun karatsuba nil _         = nil
           (*toPrint*)
         end;
 
+fun fact nil = nil
+  | fact [0] = [1]
+  | fact num =
+        let
+          fun factFrom1(start, acc) = if (start = num) then karatsuba start acc else
+            factFrom1(addBigInt start [1], karatsuba start acc)
+        in
+          factFrom1([1], [1])
+        end;
+      (*karatsuba num (fact (subBigInt num [1]))*)
+
 (* factorial: string -> string : Convert a number given as a string to its
  * factorial also in string *)
 fun factorial "" = nil
   | factorial str =
         let
           val intList = fromString str
-          fun fact nil       = nil
-            | fact [0]       = [1]
-            | fact numInList =
-                karatsuba numInList (fact (subBigInt numInList [1]))
           val res = fact intList
           (*val p = printList(res, "Factorial: ")
           val p = print("\n")*)
