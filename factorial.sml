@@ -174,6 +174,26 @@ fun karatsuba nil _         = nil
   | karatsuba [0] _         = [0]
   | karatsuba _  [0]        = [0]
   | karatsuba [num1] [num2] = toBigInt (num1 * num2)
+  | karatsuba [xH, xL] [yL] =
+        let
+          val a        = 0
+          val d        = xL * yL
+          val e        = ((xH + xL) * yL) - d
+          val aShifted = 0
+          val eShifted = shift (toBigInt e) 1
+        in
+          addBigInt eShifted (toBigInt d)
+        end
+  | karatsuba [xL] [yH, yL] =
+        let
+          val a        = 0
+          val d        = xL * yL
+          val e        = (xL * (yH + yL)) - d
+          val aShifted = 0
+          val eShifted = shift (toBigInt e) 1
+        in
+          addBigInt eShifted (toBigInt d)
+        end
   | karatsuba [xH, xL] [yH, yL] =
         let
           val a        = xH * yH
