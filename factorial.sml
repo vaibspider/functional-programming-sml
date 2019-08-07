@@ -59,10 +59,11 @@ fun toString nil   = ""
   | toString alist =
         let
           val strList = map Int.toString alist
-          fun toStr nil    = ""
-            | toStr (h::t) = h ^ toStr(t)
+          val strListPadded = map padZeros strList
+          fun toStr nil acc   = acc
+            | toStr (h::t) acc = toStr t (acc ^ h)
         in
-          toStr strList
+          toStr strListPadded ""
         end;
 
 (* toBigInt: int -> int list : Convert an integer into a list of integers form,
@@ -243,7 +244,7 @@ fun fact nil = nil
 
 (* factorial: string -> string : Convert a number given as a string to its
  * factorial also in string *)
-fun factorial "" = nil
+fun factorial "" = ""
   | factorial str =
         let
           val intList = fromString str
@@ -251,5 +252,5 @@ fun factorial "" = nil
           (*val p = printList(res, "Factorial: ")
           val p = print("\n")*)
         in
-          res
+          toString res
         end;
