@@ -1,4 +1,5 @@
-(* Pad the given string with zeros, if size of string is not a multiple of 4 *)
+(* padZeros: string -> string
+ * Pad the given string with zeros (from left side), if size of string is not a multiple of 4 *)
 fun padZeros "" = ""
   | padZeros s  = 
         let
@@ -10,7 +11,8 @@ fun padZeros "" = ""
           padZ (size s mod 4)
         end;
 
-(* Convert a given string to a list of strings - each with exactly 4 characters *)
+(* toStringList: string -> string list
+ * Convert a given string to a list of strings - each with exactly 4 characters *)
 fun toStringList ""  = nil
   | toStringList str = 
         let
@@ -23,13 +25,19 @@ fun toStringList ""  = nil
           toStringL(paddedStr, [])
         end;
 
+(* removeZeros: string list -> string list
+ * Remove leading zeros in a list of strings; Leave it as it is, if all the elements are zeros *)
 fun removeZeros nil    = nil
   | removeZeros [one]  = [one]
   | removeZeros (h::t) =
       if ((h = "0000") orelse (h = "000") orelse (h = "00") orelse (h = "0")) then removeZeros t else (h::t)
 
+(* chartoInt: char -> int
+ * Convert a digit (in character form) to integer *)
 fun chartoInt ch = ord ch - ord #"0"
 
+(* strtoInt: string -> int
+ * Convert a string into an integer *)
 fun strtoInt s = 
     let
       val chlist = explode s
@@ -41,7 +49,8 @@ fun strtoInt s =
       strtoIntAcc(diglist, 0)
     end;
 
-(* fromString: string -> int list : Convert a string of digits to an integer list with each element in base 10^4 *)
+(* fromString: string -> int list
+ * Convert a string of digits to an integer list with each element in base 10^4 *)
 fun fromString ""  = nil
   | fromString str = 
         let
@@ -53,8 +62,8 @@ fun fromString ""  = nil
           map strtoInt strLR
         end;
 
-(* toString: int list -> string : Convert a list of integers into corresponding
-* string *) (* Found a bug! *)
+(* toString: int list -> string
+ * Convert a list of integers into corresponding string *)
 fun toString nil   = ""
   | toString alist =
         let
@@ -68,13 +77,12 @@ fun toString nil   = ""
           toStr strListPadded "" 1
         end;
 
-(* toBigInt: int -> int list : Convert an integer into a list of integers form,
- * where each integer is in base 10^4 *)
+(* toBigInt: int -> int list
+ * Convert an integer into a list of integers form, where each integer is in base 10^4 *)
 fun toBigInt num = fromString (Int.toString num)
 
-(* shift: int list -> int -> int list : Take an integer list and a number, which
- * is to be considered as a power of Base (by default 10^4). Shift the integer
- * list by those many digits *)
+(* shift: int list -> int -> int list
+ * Take an integer list and a number, which is to be considered as a power of Base (by default 10^4). Shift the integer list by those many digits *)
 fun shift nil _   = nil
   | shift alist 0 = alist
   | shift alist n = 
@@ -86,23 +94,32 @@ fun shift nil _   = nil
           shiftAcc alist [] n
         end;
 
-(* zip: ('a * 'b -> 'c) -> 'a list -> 'b list -> 'c list *)
+(* zip: ('a * 'b -> 'c) -> 'a list -> 'b list -> 'c list
+ * A higher order function, which takes a function and two lists; It zips the corresponding elements of the lists using the provided function *)
 fun zip f nil nil = nil
   | zip f (h::t) (i::u) = f(h, i)::zip f t u;
 
 fun printList(li, message) = print(message ^ (String.concatWith ", " (map Int.toString li)));
 
+(* truncateZeros: int list -> int list
+ * Truncate leading zero elements in an integer list *)
 fun truncateZeros nil = nil
   | truncateZeros [one]  = [one]
   | truncateZeros (h::t) = if h = 0 then truncateZeros t else (h::t)
 
+(* alignAcc: int list * int -> int list
+ * Align the integer list by adding 'n' zero elements to its front *)
 fun alignAcc (iolist, 0) = iolist
   | alignAcc (iolist, n) =
       alignAcc(0::iolist, n - 1)
 
+(* getIntCarry: int list -> (int, int)
+ * Get an integer list, with or without the carry with the integer and return those accordingly in the tuple *)
 fun getIntCarry [integer]        = (0, integer)
   | getIntCarry [carry, integer] = (carry, integer)
 
+(* flatten: int int list -> int list -> int -> int list
+ * Convert a list of list of integers to just a list of integers (in a way, flatten them); Also pass on the carry to one to another in the process *)
 fun flatten nil oplist carryPrev    = (if (carryPrev > 0) then carryPrev::oplist else oplist)
 | flatten (h::t) oplist carryPrev = 
     let
@@ -113,8 +130,8 @@ fun flatten nil oplist carryPrev    = (if (carryPrev > 0) then carryPrev::oplist
       flatten t (res::oplist) (carry + car)
     end;
 
-(* addBigInt: int list -> int list -> int list : Add two large integer lists and
- * return the resultant integer list *)
+(* addBigInt: int list -> int list -> int list
+ * Add two large integer lists and return the resultant integer list *)
 fun addBigInt nil _       = nil
   | addBigInt _ nil       = nil
   | addBigInt alist blist = 
@@ -131,13 +148,15 @@ fun addBigInt nil _       = nil
           truncateZeros (flatten revBigIntList nil 0)
         end;
 
+(* convToPostveAcc: int list * int list * int -> int list
+ * Convert an integer list possibly with some negative elements to a completely non-negative integer list *)
 fun convToPostveAcc(nil, oplist, borrow)    = oplist (* borrow not used here *)
   | convToPostveAcc((h::t), oplist, borrow) =
       convToPostveAcc(t, (if h - borrow < 0 then 10000 + (h - borrow) else h - borrow)::oplist, 
                               (if h - borrow < 0 then 1 else 0))
 
-(* subBigInt: int list -> int list -> int list : Subtract two large integer lists and
- * return the resultant integer list *)
+(* subBigInt: int list -> int list -> int list
+ * Subtract two large integer lists and return the resultant integer list *)
 fun subBigInt nil _ = nil
   | subBigInt _ nil = nil
   | subBigInt alist blist =
@@ -153,6 +172,8 @@ fun subBigInt nil _ = nil
           convToPostveAcc(revIntList, nil, 0)
         end;
 
+(* takeFirstM: 'a list * int -> 'a list
+ * Return the first M elements in a list of elements with arbitrary type *)
 fun takeFirstM(nil, m) = nil
   | takeFirstM(li, m)  = 
       let
@@ -163,13 +184,15 @@ fun takeFirstM(nil, m) = nil
         takeFirstNAcc(li, m, nil)
       end;
 
+(* dropFirstM: 'a list * int -> 'a list
+ * Return the input list with its first M elements dropped off *)
 fun dropFirstM(nil, m)    = nil
   | dropFirstM(li, 0)     = li
   | dropFirstM((h::t), m) =
       dropFirstM(t, m - 1)
 
-(* karatsuba: int list -> int list -> int list : Take two large integers in the
- * integer list form and return their multiplication in the integer list form *)
+(* karatsuba: int list -> int list -> int list
+ * Take two large integers in the integer list form and return their multiplication in the integer list form *)
 fun karatsuba nil _         = nil
   | karatsuba _ nil         = nil
   | karatsuba [1] any       = any
@@ -233,6 +256,8 @@ fun karatsuba nil _         = nil
           (*toPrint*)
         end;
 
+(* fact: int list -> int list
+ * Calculate the factorial of a number represented as an integer list *)
 fun fact nil = nil
   | fact [0] = [1]
   | fact num =
@@ -244,6 +269,8 @@ fun fact nil = nil
         end;
       (*karatsuba num (fact (subBigInt num [1]))*)
 
+(* isValid: string -> bool 
+ * Check if a string is valid; It should only contain numbers from 0 to 9 and nothing else *)
 fun isValid str =
         let
           val chars = explode str
@@ -255,8 +282,8 @@ fun isValid str =
           scanChars chars
         end;
 
-(* factorial: string -> string : Convert a number given as a string to its
- * factorial also in string *)
+(* factorial: string -> string
+ * Convert a number given as a string to its factorial also in string *)
 fun factorial "" = ""
   | factorial str =
         let
