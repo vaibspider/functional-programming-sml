@@ -6,7 +6,7 @@ fun padZeros "" = ""
           fun padZ 0 = s
             | padZ 1 = "000"^s
             | padZ 2 = "00"^s
-            | padZ 3 = "0"^s     (* non-exhaustive matching - but it's fine in this context *)
+            | padZ 3 = "0"^s
         in
           padZ (size s mod 4)
         end;
@@ -56,8 +56,6 @@ fun fromString ""  = nil
         let
           val strL = toStringList str
           val strLR = removeZeros strL
-          (* strtoInt function can be replaced by a standard library function -
-           * Int.fromString: which converts a string to integer *)
        in
           map strtoInt strLR
         end;
@@ -96,10 +94,9 @@ fun shift nil _   = nil
 
 (* zip: ('a * 'b -> 'c) -> 'a list -> 'b list -> 'c list
  * A higher order function, which takes a function and two lists; It zips the corresponding elements of the lists using the provided function *)
-fun zip f nil nil = nil
+fun zip f nil _ = nil
+  | zip f _ nil = nil
   | zip f (h::t) (i::u) = f(h, i)::zip f t u;
-
-fun printList(li, message) = print(message ^ (String.concatWith ", " (map Int.toString li)));
 
 (* truncateZeros: int list -> int list
  * Truncate leading zero elements in an integer list *)
@@ -143,8 +140,6 @@ fun addBigInt nil _       = nil
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val intList  = zip (op +) alistNew blistNew
-          (*val p = printList(intList, "\nAddition: ")
-          val p = print("\n")*)
           val bigIntList    = map toBigInt intList
           val revBigIntList = rev bigIntList
         in
@@ -170,8 +165,6 @@ fun subBigInt nil _       = nil
           val alistNew = alignAcc(alist, if diff < 0 then ~diff else 0)
           val blistNew = alignAcc(blist, if diff > 0 then diff else 0)
           val intList  = zip (op -) alistNew blistNew
-          (*val p = printList(intList, "\nSubtraction: ")
-          val p = print("\n")*)
           val revIntList = rev intList
         in
           convToPostveAcc(revIntList, nil, 0)
@@ -246,19 +239,13 @@ fun karatsuba nil _         = nil
           val xL = List.drop(alistNew, maxN - halfN)
           val yH = List.take(blistNew, maxN - halfN)
           val yL = List.drop(blistNew, maxN - halfN)
-         (*  val p = print("\nmaxN - halfN = " ^ Int.toString(maxN - halfN))
-          val p = print("\n") *)
           val a  = karatsuba xH yH
           val d  = karatsuba xL yL
           val e  = subBigInt (subBigInt (karatsuba (addBigInt xH xL) (addBigInt yH yL)) a) d
           val aShifted = shift a (2*halfN)
           val eShifted = shift e halfN
-          (*val toPrint = addBigInt (addBigInt aShifted eShifted) d*)
-          (*val p = printList(toPrint, "\nMultiplication : ")
-          val p = print("\n")*)
         in
           addBigInt (addBigInt aShifted eShifted) d
-          (*toPrint*)
         end;
 
 (* fact: int list -> int list
@@ -272,7 +259,6 @@ fun fact nil = nil
         in
           factFrom1([1], [1])
         end;
-      (*karatsuba num (fact (subBigInt num [1]))*)
 
 (* isValid: string -> bool 
  * Check if a string is valid; It should only contain numbers from 0 to 9 and nothing else *)
@@ -298,8 +284,6 @@ fun factorial "" = ""
           val temp = checkIfValid valid
           val intList = fromString str
           val res = fact intList
-          (*val p = printList(res, "Factorial: ")
-          val p = print("\n")*)
         in
           toString res
         end;
