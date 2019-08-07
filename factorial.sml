@@ -60,10 +60,12 @@ fun toString nil   = ""
         let
           val strList = map Int.toString alist
           val strListPadded = map padZeros strList
-          fun toStr nil acc   = acc
-            | toStr (h::t) acc = toStr t (acc ^ h)
+          fun toStr nil acc _ = acc
+            | toStr (h::t) acc 1 = toStr t (acc ^ Int.toString(valOf(Int.fromString h))) 0
+            | toStr (h::t) acc _ = toStr t (acc ^ h) 0
+
         in
-          toStr strListPadded ""
+          toStr strListPadded "" 1
         end;
 
 (* toBigInt: int -> int list : Convert an integer into a list of integers form,
@@ -242,11 +244,26 @@ fun fact nil = nil
         end;
       (*karatsuba num (fact (subBigInt num [1]))*)
 
+fun isValid str =
+        let
+          val chars = explode str
+          fun scanChars [one]  = if chartoInt one >= 0 andalso chartoInt one <= 9
+                                 then true else false
+            | scanChars (h::t) =
+            if chartoInt h >= 0 andalso chartoInt h <= 9 then scanChars t else false
+        in
+          scanChars chars
+        end;
+
 (* factorial: string -> string : Convert a number given as a string to its
  * factorial also in string *)
 fun factorial "" = ""
   | factorial str =
         let
+          exception Invalid_Input_exception of string
+          val valid = isValid str
+          fun checkIfValid vald = if not vald then raise Invalid_Input_exception("Invalid input! Please specify correct number!\n") else true
+          val temp = checkIfValid valid
           val intList = fromString str
           val res = fact intList
           (*val p = printList(res, "Factorial: ")
