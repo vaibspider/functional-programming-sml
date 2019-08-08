@@ -1,3 +1,5 @@
+(* Program to calculate the Factorial of an arbitrary length integer number given as a string, using Karatsuba's algorithm for multiplication *)
+
 (* padZeros: string -> string
  * Pad the given string with zeros (from left side), if size of string is not a multiple of 4 *)
 fun padZeros "" = ""
